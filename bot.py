@@ -20,8 +20,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _write_credentials():
+    """Декодирует GOOGLE_CREDENTIALS_BASE64 и пишет credentials.json если файла нет."""
+    b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+    if b64 and not os.path.exists("credentials.json"):
+        import base64
+        with open("credentials.json", "wb") as f:
+            f.write(base64.b64decode(b64))
+        logger.info("credentials.json восстановлен из env")
+
+
 async def main():
     os.makedirs("data", exist_ok=True)
+    _write_credentials()
 
     await init_db()
     await load_tasks_pool(TASKS_POOL)
