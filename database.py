@@ -99,15 +99,13 @@ async def get_all_participants():
 # --- Tasks ---
 
 async def load_tasks_pool(tasks: list[dict]):
-    """Загружает пул задач если ещё не загружен."""
+    """Синхронизирует пул задач: удаляет pending и загружает из списка заново.
+    Активные и закрытые задачи не трогает."""
     async with aiosqlite.connect(DB_PATH) as db:
-        cursor = await db.execute("SELECT COUNT(*) FROM tasks")
-        count = (await cursor.fetchone())[0]
-        if count > 0:
-            return
-
+        await db.execute("DELETE FROM tasks WHERE status = 'pending'")
         await db.executemany(
-            "INSERT INTO tasks (number, title, url, topic, difficulty) VALUES (?, ?, ?, ?, ?)",
+            """INSERT OR IGNORE INTO tasks (number, title, url, topic, difficulty)
+               VALUES (?, ?, ?, ?, ?)""",
             [(t["number"], t["title"], t["url"], t["topic"], t["difficulty"]) for t in tasks]
         )
         await db.commit()
