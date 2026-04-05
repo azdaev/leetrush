@@ -51,8 +51,8 @@ async def init_db():
 
 # --- Participants ---
 
-async def register_participant(user_id: int, username: str | None, first_name: str) -> bool:
-    """Возвращает True если зарегистрирован впервые."""
+async def register_participant(user_id: int, username: str | None, first_name: str, sheet_col: int) -> bool:
+    """Возвращает True если зарегистрирован впервые. sheet_col передаётся снаружи."""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
             "SELECT user_id FROM participants WHERE user_id = ?", (user_id,)
@@ -66,13 +66,9 @@ async def register_participant(user_id: int, username: str | None, first_name: s
             await db.commit()
             return False
 
-        cursor = await db.execute("SELECT MAX(sheet_col) FROM participants")
-        row = await cursor.fetchone()
-        next_col = (row[0] or 3) + 1  # колонки A,B,C — №, Задача, Дедлайн → участники с D(3)
-
         await db.execute(
             "INSERT INTO participants (user_id, username, first_name, sheet_col) VALUES (?, ?, ?, ?)",
-            (user_id, username, first_name, next_col)
+            (user_id, username, first_name, sheet_col)
         )
         await db.commit()
         return True

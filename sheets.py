@@ -34,6 +34,28 @@ def _col_letter(col_index: int) -> str:
     return result
 
 
+def get_header_row() -> list[str]:
+    """Возвращает все заголовки первой строки."""
+    sheet = _get_sheet()
+    return sheet.row_values(HEADER_ROW)
+
+
+def find_col_by_name(name: str) -> int | None:
+    """Ищет колонку по имени в заголовке. Возвращает 0-based index или None."""
+    headers = get_header_row()
+    name_lower = name.lower().strip()
+    for i, h in enumerate(headers):
+        if h.lower().strip() == name_lower:
+            return i
+    return None
+
+
+def get_next_col_index() -> int:
+    """Возвращает следующий свободный 0-based индекс колонки."""
+    headers = get_header_row()
+    return len(headers)
+
+
 def setup_sheet():
     """Инициализирует заголовки таблицы если пусто."""
     sheet = _get_sheet()

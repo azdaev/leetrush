@@ -210,12 +210,25 @@ async def cmd_kick(message: Message):
 
     args = message.text.split()
     if len(args) < 2:
-        await message.reply("Использование: /kick @username или /kick USER_ID")
+        await message.reply("Использование: /kick USER_ID или /kick @username")
         return
 
-    target = args[1]
+    target = args[1].lstrip("@")
+
+    # Пробуем как user_id
+    if target.lstrip("-").isdigit():
+        user_id = int(target)
+    else:
+        # Ищем по username в БД
+        participants = await db.get_all_participants()
+        found = next((p for p in participants if p["username"] and p["username"].lower() == target.lower()), None)
+        if not found:
+            await message.reply(f"Не нашёл @{target} в базе. Используй числовой USER_ID.")
+            return
+        user_id = found["user_id"]
+
     try:
-        await message.bot.ban_chat_member(GROUP_ID, int(target))
-        await message.reply(f"Кикнул {target}.")
+        await message.bot.ban_chat_member(GROUP_ID, user_id)
+        await message.reply(f"✅ Кикнул {args[1]}.")
     except Exception as e:
         await message.reply(f"Не удалось кикнуть: {e}")
