@@ -42,10 +42,15 @@ async def init_db():
                 user_id     INTEGER NOT NULL,
                 task_id     INTEGER NOT NULL,
                 created_at  TEXT DEFAULT (datetime('now')),
+                UNIQUE(user_id, task_id),
                 FOREIGN KEY (user_id) REFERENCES participants(user_id),
                 FOREIGN KEY (task_id) REFERENCES tasks(id)
             );
         """)
+        # Migration for existing DBs without the unique constraint
+        await db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_strike_log_unique ON strike_log (user_id, task_id)"
+        )
         await db.commit()
 
 
@@ -207,16 +212,17 @@ async def has_done(task_id: int, user_id: int) -> bool:
 # --- Strikes ---
 
 async def add_strike(user_id: int, task_id: int) -> int:
-    """Добавляет страйк и возвращает новое общее количество."""
+    """Добавляет страйк и возвращает новое общее количество. Идемпотентно."""
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "INSERT INTO strike_log (user_id, task_id) VALUES (?, ?)",
+        cursor = await db.execute(
+            "INSERT OR IGNORE INTO strike_log (user_id, task_id) VALUES (?, ?)",
             (user_id, task_id)
         )
-        await db.execute(
-            "UPDATE participants SET strikes = strikes + 1 WHERE user_id = ?",
-            (user_id,)
-        )
+        if cursor.rowcount > 0:
+            await db.execute(
+                "UPDATE participants SET strikes = strikes + 1 WHERE user_id = ?",
+                (user_id,)
+            )
         await db.commit()
 
         cursor = await db.execute(

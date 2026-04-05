@@ -70,6 +70,8 @@ async def process_deadline(bot: Bot):
     all_participants = await db.get_all_participants()
     done_ids = set(await db.get_completions(task["id"]))
 
+    await db.close_task(task["id"])
+
     done_list = []
     strike_list = []
     three_strikes = []
@@ -87,8 +89,6 @@ async def process_deadline(bot: Bot):
                 pass
             if strike_count >= 3:
                 three_strikes.append((p, strike_count))
-
-    await db.close_task(task["id"])
 
     # Итоговый пост в группу
     def fmt(p):
