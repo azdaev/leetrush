@@ -45,6 +45,19 @@ async def _ensure_registered(user_id: int, username: str | None, first_name: str
     return participant
 
 
+@router.message(Command("help"))
+async def cmd_help(message: Message):
+    await message.reply(
+        "📖 <b>Команды LeetRush</b>\n\n"
+        "/start — зарегистрироваться\n"
+        "/done &lt;номер&gt; — отметить задачу выполненной\n"
+        "/undone &lt;номер&gt; — отменить отметку\n"
+        "/status — кто решил текущую задачу\n"
+        "/help — это сообщение",
+        parse_mode="HTML"
+    )
+
+
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     user = message.from_user
