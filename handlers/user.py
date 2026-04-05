@@ -115,6 +115,33 @@ async def cmd_done(message: Message):
     await message.reply(f"✅ Задача #{task_number} отмечена как выполненная!")
 
 
+@router.message(Command("status"))
+async def cmd_status(message: Message):
+    task = await db.get_active_task()
+    if not task:
+        await message.reply("Нет активной задачи.")
+        return
+
+    all_participants = await db.get_all_participants()
+    done_ids = set(await db.get_completions(task["id"]))
+
+    done = [p for p in all_participants if p["user_id"] in done_ids]
+    not_done = [p for p in all_participants if p["user_id"] not in done_ids]
+
+    def fmt(p):
+        if p["username"]:
+            return f"@{p['username']}"
+        return p["first_name"]
+
+    text = f"📊 <b>Задача #{task['number']} — {task['title']}</b>\n\n"
+    text += f"✅ Решили ({len(done)}/{len(all_participants)}):\n"
+    text += ", ".join(fmt(p) for p in done) if done else "—"
+    text += f"\n\n❌ Не решили ({len(not_done)}):\n"
+    text += ", ".join(fmt(p) for p in not_done) if not_done else "—"
+
+    await message.reply(text, parse_mode="HTML")
+
+
 @router.message(Command("undone"))
 async def cmd_undone(message: Message):
     args = message.text.split()
