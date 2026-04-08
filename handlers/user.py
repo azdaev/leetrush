@@ -45,6 +45,24 @@ async def _ensure_registered(user_id: int, username: str | None, first_name: str
     return participant
 
 
+async def _status_text(task: dict) -> str:
+    all_participants = await db.get_all_participants()
+    done_ids = set(await db.get_completions(task["id"]))
+
+    done = [p for p in all_participants if p["user_id"] in done_ids]
+    not_done = [p for p in all_participants if p["user_id"] not in done_ids]
+
+    def fmt(p):
+        return p["username"] if p["username"] else p["first_name"]
+
+    text = f"📊 <b>Задача #{task['number']} — {task['title']}</b>\n\n"
+    text += f"✅ Решили ({len(done)}/{len(all_participants)}):\n"
+    text += ", ".join(fmt(p) for p in done) if done else "—"
+    text += f"\n\n❌ Не решили ({len(not_done)}):\n"
+    text += ", ".join(fmt(p) for p in not_done) if not_done else "—"
+    return text
+
+
 @router.message(Command("help"))
 async def cmd_help(message: Message):
     await message.reply(
@@ -102,6 +120,8 @@ async def callback_done(callback: CallbackQuery):
         pass
 
     await callback.answer("✅ Отмечено! Молодец!")
+    status = await _status_text(task)
+    await callback.message.reply(status, parse_mode="HTML")
 
 
 @router.message(Command("done"))
@@ -137,7 +157,9 @@ async def cmd_done(message: Message):
     except Exception:
         pass
 
-    await message.reply(f"✅ Задача #{task_number} отмечена как выполненная!")
+    task = await db.get_task_by_number(task_number)
+    status = await _status_text(task)
+    await message.reply(f"✅ Задача #{task_number} отмечена как выполненная!\n\n{status}", parse_mode="HTML")
 
 
 @router.message(Command("status"))
@@ -147,24 +169,7 @@ async def cmd_status(message: Message):
         await message.reply("Нет активной задачи.")
         return
 
-    all_participants = await db.get_all_participants()
-    done_ids = set(await db.get_completions(task["id"]))
-
-    done = [p for p in all_participants if p["user_id"] in done_ids]
-    not_done = [p for p in all_participants if p["user_id"] not in done_ids]
-
-    def fmt(p):
-        if p["username"]:
-            return f"@{p['username']}"
-        return p["first_name"]
-
-    text = f"📊 <b>Задача #{task['number']} — {task['title']}</b>\n\n"
-    text += f"✅ Решили ({len(done)}/{len(all_participants)}):\n"
-    text += ", ".join(fmt(p) for p in done) if done else "—"
-    text += f"\n\n❌ Не решили ({len(not_done)}):\n"
-    text += ", ".join(fmt(p) for p in not_done) if not_done else "—"
-
-    await message.reply(text, parse_mode="HTML")
+    await message.reply(await _status_text(task), parse_mode="HTML")
 
 
 @router.message(Command("undone"))
