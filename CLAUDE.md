@@ -59,6 +59,5 @@ Or use: `mcp__coolify__deploy` with uuid `zgk800oo44csc8kgk4coc0gc`
 - `/undone N` — unmark
 - `/status` — see who solved current task
 
-## Scheduler jobs
-- `check_reminders` — every 1h, sends reminder at 24h and 1h before deadline
-- `process_deadline` — every 5min, closes expired tasks, assigns strikes, posts summary
+## Scheduler
+Single runner `run_jobs` ticks every 5 min. Reads `scheduled_jobs` table: `SELECT WHERE status='pending' AND fire_at <= now()`, dispatches by `kind` (`reminder_24h`, `reminder_1h`, `close_deadline`), marks `done`/`failed`. Jobs are inserted at `/next` time with `deadline - 24h`, `deadline - 1h`, `deadline`; past fire_ats are skipped. Closed tasks cause pending jobs to be silently marked done.

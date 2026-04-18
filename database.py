@@ -46,10 +46,26 @@ async def init_db():
                 FOREIGN KEY (user_id) REFERENCES participants(user_id),
                 FOREIGN KEY (task_id) REFERENCES tasks(id)
             );
+
+            CREATE TABLE IF NOT EXISTS scheduled_jobs (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id     INTEGER NOT NULL,
+                kind        TEXT NOT NULL,
+                fire_at     TEXT NOT NULL,
+                status      TEXT DEFAULT 'pending',
+                fired_at    TEXT,
+                FOREIGN KEY (task_id) REFERENCES tasks(id)
+            );
         """)
         # Migration for existing DBs without the unique constraint
         await db.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_strike_log_unique ON strike_log (user_id, task_id)"
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_scheduled_jobs_due ON scheduled_jobs (status, fire_at)"
+        )
+        await db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_scheduled_jobs_task_kind ON scheduled_jobs (task_id, kind)"
         )
         await db.commit()
 
@@ -156,6 +172,15 @@ async def get_task_by_number(number: int):
         return await cursor.fetchone()
 
 
+async def get_task_by_id(task_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM tasks WHERE id = ?", (task_id,)
+        )
+        return await cursor.fetchone()
+
+
 async def get_all_tasks():
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -240,3 +265,42 @@ async def get_strikes_table():
             "SELECT * FROM participants ORDER BY strikes DESC, first_name"
         )
         return await cursor.fetchall()
+
+
+# --- Scheduled jobs ---
+
+async def schedule_job(task_id: int, kind: str, fire_at: datetime):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "INSERT OR IGNORE INTO scheduled_jobs (task_id, kind, fire_at) VALUES (?, ?, ?)",
+            (task_id, kind, fire_at.isoformat())
+        )
+        await db.commit()
+
+
+async def get_due_jobs(now: datetime):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM scheduled_jobs WHERE status = 'pending' AND fire_at <= ? ORDER BY fire_at",
+            (now.isoformat(),)
+        )
+        return await cursor.fetchall()
+
+
+async def mark_job_done(job_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE scheduled_jobs SET status = 'done', fired_at = datetime('now') WHERE id = ?",
+            (job_id,)
+        )
+        await db.commit()
+
+
+async def mark_job_failed(job_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE scheduled_jobs SET status = 'failed', fired_at = datetime('now') WHERE id = ?",
+            (job_id,)
+        )
+        await db.commit()

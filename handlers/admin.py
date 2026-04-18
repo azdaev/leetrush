@@ -8,6 +8,7 @@ from aiogram.filters import Command
 import database as db
 import sheets
 from config import ADMIN_ID, GROUP_ID
+from scheduler import schedule_task_jobs
 
 router = Router()
 
@@ -118,6 +119,7 @@ async def cmd_next(message: Message):
     )
 
     await db.activate_task(task["id"], deadline, sent.message_id)
+    await schedule_task_jobs(task["id"], deadline)
 
     try:
         sheets.add_task_row(task["number"], task["title"], _format_deadline(deadline))
