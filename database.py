@@ -257,6 +257,33 @@ async def add_strike(user_id: int, task_id: int) -> int:
         return row[0]
 
 
+async def remove_strike(user_id: int) -> int:
+    """Снимает один страйк (мин. 0). Удаляет последнюю запись из strike_log. Возвращает новый счёт."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT strikes FROM participants WHERE user_id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        if not row or row[0] <= 0:
+            return row[0] if row else 0
+
+        await db.execute(
+            "DELETE FROM strike_log WHERE id = (SELECT id FROM strike_log WHERE user_id = ? ORDER BY created_at DESC LIMIT 1)",
+            (user_id,)
+        )
+        await db.execute(
+            "UPDATE participants SET strikes = strikes - 1 WHERE user_id = ?",
+            (user_id,)
+        )
+        await db.commit()
+
+        cursor = await db.execute(
+            "SELECT strikes FROM participants WHERE user_id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        return row[0]
+
+
 async def get_strikes_table():
     """Возвращает всех участников с их страйками."""
     async with aiosqlite.connect(DB_PATH) as db:

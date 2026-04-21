@@ -4,6 +4,7 @@ from aiogram.filters import Command
 
 import database as db
 import sheets
+from config import ADMIN_ID
 
 router = Router()
 
@@ -65,15 +66,24 @@ async def _status_text(task: dict) -> str:
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
-    await message.reply(
+    text = (
         "📖 <b>Команды LeetRush</b>\n\n"
         "/start — зарегистрироваться\n"
         "/done &lt;номер&gt; — отметить задачу выполненной\n"
         "/undone &lt;номер&gt; — отменить отметку\n"
         "/status — кто решил текущую задачу\n"
-        "/help — это сообщение",
-        parse_mode="HTML"
+        "/help — это сообщение"
     )
+    if message.from_user.id == ADMIN_ID:
+        text += (
+            "\n\n🔧 <b>Админ</b>\n"
+            "/next &lt;3d | DD.MM.YYYY HH:MM&gt; — опубликовать следующую задачу\n"
+            "/strikes — таблица страйков\n"
+            "/unstrike &lt;USER_ID | @username&gt; — снять один страйк\n"
+            "/tasks — очередь задач\n"
+            "/kick &lt;USER_ID | @username&gt; — кикнуть участника"
+        )
+    await message.reply(text, parse_mode="HTML")
 
 
 @router.message(Command("start"))

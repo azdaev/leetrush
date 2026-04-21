@@ -175,6 +175,38 @@ async def cmd_tasks(message: Message):
     await message.reply(text, parse_mode="HTML")
 
 
+@router.message(Command("unstrike"))
+async def cmd_unstrike(message: Message):
+    if not _is_admin(message):
+        return
+
+    args = message.text.split()
+    if len(args) < 2:
+        await message.reply("Использование: /unstrike USER_ID или /unstrike @username")
+        return
+
+    target = args[1].lstrip("@")
+
+    if target.lstrip("-").isdigit():
+        user_id = int(target)
+        participant = await db.get_participant(user_id)
+    else:
+        participants = await db.get_all_participants()
+        participant = next(
+            (p for p in participants if p["username"] and p["username"].lower() == target.lower()), None
+        )
+        if participant:
+            user_id = participant["user_id"]
+
+    if not participant:
+        await message.reply(f"Участник не найден. Проверь USER_ID или username.")
+        return
+
+    new_count = await db.remove_strike(user_id)
+    name = f"@{participant['username']}" if participant["username"] else participant["first_name"]
+    await message.reply(f"✅ Страйк снят с {name}. Теперь страйков: {new_count}")
+
+
 @router.message(Command("kick"))
 async def cmd_kick(message: Message):
     if not _is_admin(message):
