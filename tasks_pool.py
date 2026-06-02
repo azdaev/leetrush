@@ -1,24 +1,32 @@
-from config import TASK_START_NUMBER
+# Пул #12–#21 («Два указателя») полностью пройден.
+# Новый пул — две темы по итогам опроса: «Скользящее окно» и «Куча».
+# Нумерация продолжается с #22 (закрытые #12–#21 в БД не трогаются).
+# Маппинг номер→строка таблицы остаётся через TASK_START_NUMBER (#12 → строка 2).
+
+POOL_START_NUMBER = 22
 
 _raw = [
-    # #12 — уже активна, оставляем как якорь
-    ("Reverse String", "https://leetcode.com/problems/reverse-string/description/", "Два указателя", "easy"),
+    # Скользящее окно (#22–#30)
+    ("Maximum Average Subarray I", "https://leetcode.com/problems/maximum-average-subarray-i/description/", "Скользящее окно", "easy"),
+    ("Contains Duplicate II", "https://leetcode.com/problems/contains-duplicate-ii/description/", "Скользящее окно", "easy"),
+    ("Minimum Recolors to Get K Consecutive Black Blocks", "https://leetcode.com/problems/minimum-recolors-to-get-k-consecutive-black-blocks/description/", "Скользящее окно", "easy"),
+    ("Max Consecutive Ones III", "https://leetcode.com/problems/max-consecutive-ones-iii/description/", "Скользящее окно", "medium"),
+    ("Longest Substring Without Repeating Characters", "https://leetcode.com/problems/longest-substring-without-repeating-characters/description/", "Скользящее окно", "medium"),
+    ("Substrings of Size Three with Distinct Characters", "https://leetcode.com/problems/substrings-of-size-three-with-distinct-characters/description/", "Скользящее окно", "easy"),
+    ("Minimum Size Subarray Sum", "https://leetcode.com/problems/minimum-size-subarray-sum/description/", "Скользящее окно", "medium"),
+    ("Defuse the Bomb", "https://leetcode.com/problems/defuse-the-bomb/description/", "Скользящее окно", "easy"),
+    ("Longest Subarray of 1's After Deleting One Element", "https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/description/", "Скользящее окно", "medium"),
 
-    # Новый пул — Два указателя (#13–#21)
-    ("Reverse Vowels of a String", "https://leetcode.com/problems/reverse-vowels-of-a-string/description/", "Два указателя", "easy"),
-    ("Valid Palindrome", "https://leetcode.com/problems/valid-palindrome/description/", "Два указателя", "easy"),
-    ("Find First Palindromic String in the Array", "https://leetcode.com/problems/find-first-palindromic-string-in-the-array/description/", "Два указателя", "easy"),
-    ("Move Zeroes", "https://leetcode.com/problems/move-zeroes/description/", "Два указателя", "easy"),
-    ("Remove Duplicates from Sorted Array", "https://leetcode.com/problems/remove-duplicates-from-sorted-array/description/", "Два указателя", "easy"),
-    ("Squares of a Sorted Array", "https://leetcode.com/problems/squares-of-a-sorted-array/description/", "Два указателя", "easy"),
-    ("Two Sum II - Input Array Is Sorted", "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/", "Два указателя", "medium"),
-    ("Reverse String II", "https://leetcode.com/problems/reverse-string-ii/description/", "Два указателя", "easy"),
-    ("Longest Palindromic Substring", "https://leetcode.com/problems/longest-palindromic-substring/description/", "Два указателя", "medium"),
+    # Куча (#31–#34)
+    ("Last Stone Weight", "https://leetcode.com/problems/last-stone-weight/description/", "Куча", "easy"),
+    ("Kth Largest Element in an Array", "https://leetcode.com/problems/kth-largest-element-in-an-array/description/", "Куча", "medium"),
+    ("Top K Frequent Words", "https://leetcode.com/problems/top-k-frequent-words/description/", "Куча", "medium"),
+    ("K Closest Points to Origin", "https://leetcode.com/problems/k-closest-points-to-origin/description/", "Куча", "medium"),
 ]
 
 TASKS_POOL = [
     {
-        "number": TASK_START_NUMBER + i,
+        "number": POOL_START_NUMBER + i,
         "title": title,
         "url": url,
         "topic": topic,

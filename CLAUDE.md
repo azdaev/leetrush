@@ -40,7 +40,11 @@ Telegram bot for automating a group LeetCode challenge.
 Not yet registered (need to /start): Gamzat (col 6), @okk_otsu, @janaridevv, @as_suguri, @monotheistx, @themisar
 
 ## Task pool
-Tasks #12–#21, Two Pointers theme. #12 (Reverse String) currently active, deadline 07.04.2026 23:59 MSK.
+Tasks #12–#21 (Two Pointers) all solved/closed. Current pool defined in `tasks_pool.py` starts at #22 (`POOL_START_NUMBER`):
+- #22–#30 — Скользящее окно (sliding window, 9 tasks)
+- #31–#34 — Куча (heap, 4 tasks)
+
+Numbering is explicit via `POOL_START_NUMBER`; sheet row mapping still anchors on #12 (`row = 2 + (number − 12)`). `load_tasks_pool` deletes pending tasks and re-inserts the pool with `INSERT OR IGNORE` keyed on number, so reusing a closed/active number silently drops it — new tasks must be numbered above the live max.
 
 ## Deployment
 Push to `main` → manually trigger redeploy in Coolify (no auto-deploy webhook configured).
