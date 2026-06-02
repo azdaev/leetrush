@@ -4,7 +4,7 @@ from aiogram.filters import Command
 
 import database as db
 import sheets
-from config import ADMIN_ID
+from auth import is_admin
 
 router = Router()
 
@@ -74,7 +74,7 @@ async def cmd_help(message: Message):
         "/status — кто решил текущую задачу\n"
         "/help — это сообщение"
     )
-    if message.from_user.id == ADMIN_ID:
+    if await is_admin(message.bot, message.from_user.id):
         text += (
             "\n\n🔧 <b>Админ</b>\n"
             "/next &lt;3d | DD.MM.YYYY HH:MM&gt; — опубликовать следующую задачу\n"

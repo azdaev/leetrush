@@ -7,7 +7,8 @@ from aiogram.filters import Command
 
 import database as db
 import sheets
-from config import ADMIN_ID, GROUP_ID
+from config import GROUP_ID
+from auth import is_admin
 from scheduler import schedule_task_jobs
 
 router = Router()
@@ -36,8 +37,8 @@ TOPIC_EMOJI = {
 }
 
 
-def _is_admin(message: Message) -> bool:
-    return message.from_user.id == ADMIN_ID
+async def _is_admin(message: Message) -> bool:
+    return await is_admin(message.bot, message.from_user.id)
 
 
 def _parse_deadline(arg: str) -> datetime | None:
@@ -68,7 +69,7 @@ def _number_emoji(n: int) -> str:
 
 @router.message(Command("next"))
 async def cmd_next(message: Message):
-    if not _is_admin(message):
+    if not await _is_admin(message):
         return
 
     args = message.text.split(maxsplit=1)
@@ -133,7 +134,7 @@ async def cmd_next(message: Message):
 
 @router.message(Command("strikes"))
 async def cmd_strikes(message: Message):
-    if not _is_admin(message):
+    if not await _is_admin(message):
         return
 
     participants = await db.get_strikes_table()
@@ -156,7 +157,7 @@ async def cmd_strikes(message: Message):
 
 @router.message(Command("tasks"))
 async def cmd_tasks(message: Message):
-    if not _is_admin(message):
+    if not await _is_admin(message):
         return
 
     tasks = await db.get_all_tasks()
@@ -179,7 +180,7 @@ async def cmd_tasks(message: Message):
 
 @router.message(Command("unstrike"))
 async def cmd_unstrike(message: Message):
-    if not _is_admin(message):
+    if not await _is_admin(message):
         return
 
     args = message.text.split()
@@ -211,7 +212,7 @@ async def cmd_unstrike(message: Message):
 
 @router.message(Command("kick"))
 async def cmd_kick(message: Message):
-    if not _is_admin(message):
+    if not await _is_admin(message):
         return
 
     args = message.text.split()
